@@ -4,6 +4,7 @@ namespace sergiosgc\output;
 class Negotiated {
     private $mediaTypePriorities;
     private $templatePath;
+    private static $currentOutputStack = [];
     public function __construct( $path, $mediaTypePriorities = null ) {
         if (is_null($mediaTypePriorities)) $mediaTypePriorities = [ 'application/json', 'text/html; charset=UTF-8' ];
         $this->mediaTypePriorities = $mediaTypePriorities;
@@ -16,7 +17,8 @@ class Negotiated {
         $this->templatePath = realpath($path);
         if (empty($this->templatePath)) throw new Exception_MissingTemplatePath(sprintf('Template path does not exist: %s', $path));
     }
-    public function output() {
+    public function output($uri = null) {
+        self::$currentOutputStack[] = $this;
         if (!isset($_SERVER['HTTP_ACCEPT'])) {
             $mediaType = null;
         } else {
@@ -27,24 +29,39 @@ class Negotiated {
         if (is_null($mediaType)) $mediaType = $this->mediaTypePriorities[0];
         $pathFormattedMediaType = strtr(explode(';', $mediaType, 2)[0], array('/' => '-'));
         if (!is_dir(sprintf('%s/%s', $this->templatePath, $pathFormattedMediaType))) {
+            array_pop(self::$currentOutputStack);
             throw new Exception_MissingTemplatePath(sprintf('Template path for media type "%s" does not exist: %s', $mediaType, sprintf('%s/%s', $this->templatePath, $pathFormattedMediaType)));
         }
         $templatePathForMediaType = realpath(sprintf('%s/%s', $this->templatePath, $pathFormattedMediaType));
-        if (isset($_SERVER['ROUTER_PATHBOUND_SCRIPT_FILENAME'])) {
-            $templateFile = basename($_SERVER['ROUTER_PATHBOUND_SCRIPT_FILENAME']);
+        if (preg_match('_.*/(?<filename>[^/]*\.php)$_', explode('?', is_null($uri) ? $_SERVER['REQUEST_URI'] : $uri, 2)[0], $matches)) {
+            $templateFile = $matches['filename'];
         } else {
-            $templateFile = 'index.php';
+            if (isset($_SERVER['ROUTER_PATHBOUND_SCRIPT_FILENAME'])) {
+                $templateFile = basename($_SERVER['ROUTER_PATHBOUND_SCRIPT_FILENAME']);
+            } else {
+                $templateFile = 'index.php';
+            }
         }
-        $parts = array_values(array_filter(explode('/', explode('?', $_SERVER['REQUEST_URI'], 2)[0]), function($p) { return $p != ""; }));
+        $parts = array_values(array_filter(explode('/', explode('?', is_null($uri) ? $_SERVER['REQUEST_URI'] : $uri, 2)[0]), function($p) { return $p != ""; }));
         do {
             $candidate = sprintf("%s/%s/%s", $templatePathForMediaType, implode('/', $parts), $templateFile);
             array_pop($parts);
         } while (count($parts) && !is_file($candidate));
-        if (!is_file($candidate)) throw new Exception_MissingTemplate(sprintf('No template found under %s for %s', $templatePathForMediaType, explode('?', $_SERVER['REQUEST_URI'], 2)[0]));
+        if (!is_file($candidate)) $candidate = sprintf("%s/%s", $templatePathForMediaType, $templateFile);
+        if (!is_file($candidate)) throw new Exception_MissingTemplate(sprintf('No template found under %s for %s', $templatePathForMediaType, explode('?', is_null($uri) ? $_SERVER['REQUEST_URI'] : $uri, 2)[0]));
         $candidate = realpath($candidate);
         $this->include($candidate);
+        array_pop(self::$currentOutputStack);
     }
     protected function include($file) {
+        global $tvars;
         include($file);
+    }
+    public static function currentOutput() {
+        if (0 == count(self::$currentOutputStack)) return null;
+        return self::$currentOutputStack[count(self::$currentOutputStack) - 1];
+    }
+    public static function outputFromCurrent($uri = null) {
+        self::currentOutput()->output($uri);
     }
 }
