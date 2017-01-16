@@ -18,6 +18,13 @@ class Negotiated {
         if (empty($this->templatePath)) throw new Exception_MissingTemplatePath(sprintf('Template path does not exist: %s', $path));
     }
     public function output($uri = null) {
+        if (is_null($uri)) {
+            if (isset($_SERVER['ROUTER_PATHBOUND_REQUEST_URI'])) {
+                $uri = $_SERVER['ROUTER_PATHBOUND_REQUEST_URI'];
+            } else {
+                $uri = $_SERVER['REQUEST_URI'];
+            }
+        }
         self::$currentOutputStack[] = $this;
         if (!isset($_SERVER['HTTP_ACCEPT'])) {
             $mediaType = null;
@@ -33,7 +40,7 @@ class Negotiated {
             throw new Exception_MissingTemplatePath(sprintf('Template path for media type "%s" does not exist: %s', $mediaType, sprintf('%s/%s', $this->templatePath, $pathFormattedMediaType)));
         }
         $templatePathForMediaType = realpath(sprintf('%s/%s', $this->templatePath, $pathFormattedMediaType));
-        if (preg_match('_.*/(?<filename>[^/]*\.php)$_', explode('?', is_null($uri) ? $_SERVER['REQUEST_URI'] : $uri, 2)[0], $matches)) {
+        if (preg_match('_.*/(?<filename>[^/]*\.php)$_', explode('?', $uri, 2)[0], $matches)) {
             $templateFile = $matches['filename'];
         } else {
             if (isset($_SERVER['ROUTER_PATHBOUND_SCRIPT_FILENAME'])) {
@@ -42,12 +49,12 @@ class Negotiated {
                 $templateFile = 'index.php';
             }
         }
-        $parts = array_values(array_filter(explode('/', explode('?', is_null($uri) ? $_SERVER['REQUEST_URI'] : $uri, 2)[0]), function($p) { return $p != ""; }));
-        do {
+        $parts = array_values(array_filter(explode('/', explode('?', $uri, 2)[0]), function($p) { return $p != ""; }));
+        if (is_file(sprintf("%s/%s/%s", $templatePathForMediaType, implode('/', $parts), $templateFile))) {
             $candidate = sprintf("%s/%s/%s", $templatePathForMediaType, implode('/', $parts), $templateFile);
-            array_pop($parts);
-        } while (count($parts) && !is_file($candidate));
-        if (!is_file($candidate)) $candidate = sprintf("%s/%s", $templatePathForMediaType, $templateFile);
+        } else {
+            $candidate = sprintf("%s/%s", $templatePathForMediaType, implode('/', $parts));
+        }
         if (!is_file($candidate)) throw new Exception_MissingTemplate(sprintf('No template found under %s for %s', $templatePathForMediaType, explode('?', is_null($uri) ? $_SERVER['REQUEST_URI'] : $uri, 2)[0]));
         $candidate = realpath($candidate);
         $this->include($candidate);
