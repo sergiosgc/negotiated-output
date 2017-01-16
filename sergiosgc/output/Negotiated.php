@@ -57,10 +57,10 @@ class Negotiated {
         }
         if (!is_file($candidate)) throw new Exception_MissingTemplate(sprintf('No template found under %s for %s', $templatePathForMediaType, explode('?', is_null($uri) ? $_SERVER['REQUEST_URI'] : $uri, 2)[0]));
         $candidate = realpath($candidate);
-        $this->include($candidate);
+        $this->_include($candidate);
         array_pop(self::$currentOutputStack);
     }
-    protected function include($file) {
+    protected function _include($file) {
         global $tvars;
         include($file);
     }
