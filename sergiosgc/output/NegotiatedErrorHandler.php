@@ -142,7 +142,11 @@ class NegotiatedErrorHandler {
  Message: <?= $ex->getMessage() ?>
 
 
+ Exception Class: \<?= get_class($ex) ?>
+
+
  Code: <?= $ex->getCode() ?>
+
 <?php if (self::$hideDetails) return; ?>
 
  Backtrace: 
