@@ -61,7 +61,7 @@ class NegotiatedErrorHandler {
                     )
                 )
             );
-            header(sprintf('X-ChromeLogger-Data: %s', base64_encode(json_encode($chromeLoggerPayload))));
+            @header(sprintf('X-ChromeLogger-Data: %s', base64_encode(json_encode($chromeLoggerPayload))));
         }
         if ($errno & self::$delegatedErrorMask && is_callable(self::$delegatedErrorHandler)) call_user_func(self::$delegatedErrorHandler, $errno, $errstr, $errfile, $errline, $errcontext);
     }
@@ -99,7 +99,7 @@ class NegotiatedErrorHandler {
                 )), 
                 $ex->getTrace()));
         if (self::$hideDetails) unset($result['traceback']);
-        header('Content-type: application/json; charset=utf-8');
+        @header('Content-type: application/json; charset=utf-8');
         print(json_encode(array('exception' => $result)));
 	}
     public static function fallback_html_exception_handler($ex) {
@@ -117,7 +117,7 @@ class NegotiatedErrorHandler {
 <?php
     }
     public static function fallback_text_exception_handler($ex) {
-        header('Content-type: text/plain; charset=utf-8');
+        @header('Content-type: text/plain; charset=utf-8');
         self::_fallback_text_exception_handler($ex);
     }
     public static function _fallback_text_exception_handler($ex) {
