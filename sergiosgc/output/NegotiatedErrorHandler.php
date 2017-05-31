@@ -7,6 +7,7 @@ class NegotiatedErrorHandler {
     public static $browserLogErrorMask = E_ALL;
     public static $delegatedErrorMask = E_ALL;
     public static $delegatedErrorHandler = NULL;
+    public static $maxDebugHeaderSize = 32768; // Large header sizes cause complications in some environments, namely on nginx+fastcgi; limit debug header output size
 
     public static function setup() {
         set_exception_handler(array('\sergiosgc\output\NegotiatedErrorHandler', 'exception_handler'));
@@ -61,7 +62,11 @@ class NegotiatedErrorHandler {
                     )
                 )
             );
-            @header(sprintf('X-ChromeLogger-Data: %s', base64_encode(json_encode($chromeLoggerPayload))));
+            $header = sprintf('X-ChromeLogger-Data: %s', base64_encode(json_encode($chromeLoggerPayload)));
+            if (strlen($header) < self::$maxDebugHeaderSize) {
+                @header($header);
+                self::$maxDebugHeaderSize -= strlen($header);
+            }
         }
         if ($errno & self::$delegatedErrorMask && is_callable(self::$delegatedErrorHandler)) call_user_func(self::$delegatedErrorHandler, $errno, $errstr, $errfile, $errline, $errcontext);
     }
@@ -162,7 +167,7 @@ class NegotiatedErrorHandler {
         printf($lineFormatString, ' ', 'Function', 'Location');
         echo(strtr(sprintf($lineFormatString, '', '', ''), array('|' => '+', ' ' => '-', "\n" => "-\n")));
         foreach ($ex->getTrace() as $idx => $tb) { 
-            printf($lineFormatString, $idx, isset($tb['class']) ? sprintf('%s%s%s', $tb['class'], $tb['type'], $tb['function']) : $tb['function'], $tb['file'] . ' +' . $tb['line']);
+            printf($lineFormatString, $idx, isset($tb['class']) ? sprintf('%s%s%s', $tb['class'], $tb['type'], $tb['function']) : $tb['function'], $idx == 0 ? ($ex->getFile() . ' +' . $ex->getLine()) : ($tb['file'] . ' +' . $tb['line']));
         }
 
 
