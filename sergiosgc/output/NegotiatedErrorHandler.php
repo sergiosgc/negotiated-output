@@ -82,6 +82,10 @@ class NegotiatedErrorHandler {
         exit;
     }
     public static function fallback_exception_handler($ex) {
+        if ("cli" == php_sapi_name()) {
+            NegotiatedErrorHandler::fallback_text_exception_handler($ex);
+            return;
+        }
         $negotiator = new \Negotiation\Negotiator();
         $mediaType = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], array('application/json; charset=UTF-8', 'text/html; charset=UTF-8'));
         if (!is_null($mediaType)) $mediaType = $mediaType->getValue();
