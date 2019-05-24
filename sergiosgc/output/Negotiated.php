@@ -68,7 +68,8 @@ class Negotiated {
         if (0 == count(self::$currentOutputStack)) return null;
         return self::$currentOutputStack[count(self::$currentOutputStack) - 1];
     }
-    public static function outputFromCurrent($uri = null) {
+    public static function outputFromCurrent($uri = null, $ob_var = null) {
+        if (!is_null($ob_var))  $GLOBALS['tvars'][$ob_var] = ob_get_clean();
         self::currentOutput()->output($uri);
     }
 }
