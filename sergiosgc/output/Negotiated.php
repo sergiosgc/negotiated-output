@@ -28,7 +28,7 @@ class Negotiated {
         if (is_null($mediaType)) $mediaType = $this->mediaTypePriorities[0];
         return $mediaType;
     }
-    public function output($uri = null) {
+    public function output($uri = null, $travelUpDirectoryTree = true) {
         if (is_null($uri)) $uri = isset($_SERVER['ROUTER_PATHBOUND_REQUEST_URI']) ? $_SERVER['ROUTER_PATHBOUND_REQUEST_URI'] :  $_SERVER['REQUEST_URI']; 
         self::$currentOutputStack[] = $this;
         $mediaType = $this->getNegotiatedMediaType();
@@ -56,7 +56,7 @@ class Negotiated {
             $candidate = realpath(sprintf("%s/%s/%s", $templatePathForMediaType, implode('/', $parts), 'all.php'));
             if ($candidate && is_file($candidate)) return $this->_include($candidate);
 
-            if (!count($parts)) throw new Exception_MissingTemplate(sprintf('No template found under %s for %s', $templatePathForMediaType, explode('?', is_null($uri) ? $_SERVER['REQUEST_URI'] : $uri, 2)[0]));
+            if (!$travelUpDirectoryTree || !count($parts)) throw new Exception_MissingTemplate(sprintf('No template found under %s for %s', $templatePathForMediaType, explode('?', is_null($uri) ? $_SERVER['REQUEST_URI'] : $uri, 2)[0]));
             array_pop($parts);
         } while (true);
     }

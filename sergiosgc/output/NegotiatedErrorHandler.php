@@ -75,6 +75,18 @@ class NegotiatedErrorHandler {
             if (!isset($_SERVER['HTTP_ACCEPT'])) throw new Exception('Negotiated template paths do not support CLI');
             if (!isset($GLOBALS['tvars'])) $GLOBALS['tvars'] = array();
             $GLOBALS['tvars']['exception'] = $ex;
+            $class = get_class($ex);
+            $candidates = [];
+            while ($class) {
+                $candidates[] = strtr($class, ['\\' => '/']);
+                $class = get_parent_class($class);
+            }
+            foreach ($candidates as $candidate) {
+                try {
+                    (new \sergiosgc\output\Negotiated('templates', array('application/json; charset=UTF-8', 'text/html; charset=UTF-8')))->output('/exception/' . $candidate . '/', false);
+                    exit;
+                } catch (Exception $e) { }
+            }
             (new \sergiosgc\output\Negotiated('templates', array('application/json; charset=UTF-8', 'text/html; charset=UTF-8')))->output('/exception/');
         } catch (Exception $e) {
             static::fallback_exception_handler($ex);
