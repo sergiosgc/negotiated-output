@@ -2,7 +2,7 @@
     "name": "sergiosgc/negotiated-output",
     "description": "A template router based on content negotiation",
     "keywords": ["rest", "template", "router"],
-    "homepage": "https://github.com/sergiosgc/composer-negotiated-output",
+    "homepage": "https://github.com/sergiosgc/negotiated-output",
     "license": "MIT",
     "authors": [
         {
