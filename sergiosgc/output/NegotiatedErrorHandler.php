@@ -83,11 +83,11 @@ class NegotiatedErrorHandler {
             }
             foreach ($candidates as $candidate) {
                 try {
-                    (new \sergiosgc\output\Negotiated('templates', array('application/json; charset=UTF-8', 'text/html; charset=UTF-8')))->output('/exception/' . $candidate . '/', false);
+                    (new \sergiosgc\output\Negotiated('templates', array('application/json; charset=UTF-8', 'text/html; charset=UTF-8')))->template('/exception/' . $candidate . '/');
                     exit;
                 } catch (Exception $e) { }
             }
-            (new \sergiosgc\output\Negotiated('templates', array('application/json; charset=UTF-8', 'text/html; charset=UTF-8')))->output('/exception/');
+            (new \sergiosgc\output\Negotiated('templates', array('application/json; charset=UTF-8', 'text/html; charset=UTF-8')))->template('/exception/');
         } catch (Exception $e) {
             static::fallback_exception_handler($ex);
         }
