@@ -84,4 +84,10 @@ class Negotiated {
         if (!$templateFile) throw new Exception_MissingTemplate(sprintf('No template found for uri %s', $uri));
         $this->_include($templateFile, $tvars);
     }
+    public function stemplate($uri = null, $tvars = null, $ob_var = null) {
+        if (!is_null($ob_var)) $tvars[$ob_var] = ob_get_clean();
+        ob_start();
+        $this->template($uri, $tvars);
+        return ob_get_clean();
+    }
 }
