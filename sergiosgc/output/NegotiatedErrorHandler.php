@@ -14,7 +14,7 @@ class NegotiatedErrorHandler {
         self::$delegatedErrorHandler = set_error_handler(array('\sergiosgc\output\NegotiatedErrorHandler', 'error_handler'));
     }
     public static function error_handler($errno, $errstr, $errfile, $errline, $errcontext) {
-        if (0 === error_reporting()) return; // Error was fired by lined masked with the @ operator
+        if (0 === error_reporting()) return; // Error was fired by line masked with the @ operator
         if ($errno & self::$fatalErrorMask) {
             throw new Exception($errstr);
         }
