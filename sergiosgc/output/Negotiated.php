@@ -63,11 +63,17 @@ class Negotiated {
         return false;
     }
     public function getNegotiatedMediaType() {
-        if (!isset($_SERVER['HTTP_ACCEPT'])) {
+        $accept = null;
+        if (isset($_REQUEST['x-accept'])) {
+            $accept = $_REQUEST['x-accept'];
+        } elseif (isset($_SERVER['HTTP_ACCEPT'])) {
+            $accept = $_SERVER['HTTP_ACCEPT'];
+        }
+        if (is_null($accept)) {
             $mediaType = null;
         } else {
             $negotiator = new \Negotiation\Negotiator();
-            $mediaType = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], $this->mediaTypePriorities);
+            $mediaType = $negotiator->getBest($accept, $this->mediaTypePriorities);
             if (!is_null($mediaType)) $mediaType = $mediaType->getValue();
         }
         if (is_null($mediaType)) $mediaType = $this->mediaTypePriorities[0];
