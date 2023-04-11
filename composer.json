@@ -11,8 +11,8 @@
         }
     ],
     "require": {
-        "php": ">=7.0.0",
-        "willdurand/negotiation": "2.*"
+        "php": ">=8.0.0",
+        "willdurand/negotiation": "3.*"
     },
     "autoload": {
         "psr-4": {"sergiosgc\\": "sergiosgc/"}
